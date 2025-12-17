@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "随机电子书阅读器",
+  "version": "1.0",
+  "description": "一个可以随机阅读EPUB和PDF格式电子书的Chrome扩展",
+  "permissions": [],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    },
+    "default_title": "随机电子书阅读器"
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/jszip.min.js", "lib/pdf.min.js", "lib/pdf.worker.min.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机电子书阅读器</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- 引入必要的第三方库 -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.0.279/pdf.min.js"></script>
+</head>
+<body>
+    <div class="app-container random-display-mode">
+        <!-- 电子书展示区域 -->
+        <main class="library-container">
+            <div class="books-scroll-container">
+                <div id="booksContainer" class="books-container">
+                    <!-- 电子书将在这里动态加载 -->
+                    <div class="empty-state">
+                        <p>请选择包含电子书的文件夹</p>
+                        <p class="hint">支持EPUB、PDF格式及已解压的EPUB文件夹</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 电子书阅读器模板（将被动态克隆） -->
+    <template id="bookTemplate">
+        <div class="book-item">
+            <div class="book-header">
+                <!-- 导航按钮组 -->
+                <div class="chapter-navigation">
+                    <!-- 文件夹选择按钮 -->
+                    <label for="folderInput" class="folder-select-btn-icon" title="选择文件夹">📁</label>
+                    <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;">
+                    
+                    <!-- 随机阅读按钮 -->
+                    <button id="randomDisplayBtn" class="random-display-btn-icon" title="随机阅读">🎲</button>
+                    
+                    <!-- 随机章节按钮 -->
+                    <button id="randomChapterBtn" class="random-chapter-btn-icon" title="随机章节">📖</button>
+                    
+                    <!-- 章节导航 -->
+                    <button class="nav-button prev-chapter" title="上一章">←</button>
+                    <div class="chapter-selector-container">
+                        <span class="chapter-info">第 1 章 / 共 1 章</span>
+                        <div class="chapter-dropdown" style="display: none;">
+                            <!-- 章节下拉菜单将在这里动态生成 -->
+                        </div>
+                    </div>
+                    <button class="nav-button next-chapter" title="下一章">→</button>
+                    
+                    <!-- 自动滚动控制 -->
+                    <div class="auto-scroll-controls">
+                        <button id="toggleAutoScrollBtn" class="auto-scroll-btn" title="自动滚动开关">⏯️</button>
+                        <div class="scroll-speed-controls">
+                            <button class="speed-btn decrease-speed" title="减小滚动速度">-</button>
+                            <button class="speed-btn increase-speed" title="增大滚动速度">+</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 字号调整按钮 -->
+                    <div class="font-size-controls">
+                        <button class="font-size-btn decrease-font" title="减小字号">A-</button>
+                        <button class="font-size-btn increase-font" title="增大字号">A+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="book-content">
+                <div class="book-pages">
+                    <!-- 电子书内容将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <span id="statusText">等待选择文件夹...</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
