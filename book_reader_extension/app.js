@@ -14,7 +14,9 @@ const appState = {
     scrollIntervalId: null,
     // 用于跟踪图书阅读顺序
     readBooksOrder: [],
-    currentReadIndex: 0
+    currentReadIndex: 0,
+    // 自动滚动限制在当前书循环
+    loopCurrentBook: false
 };
 
 // 获取DOM元素
@@ -1350,10 +1352,7 @@ function startAutoScroll(book) {
     appState.autoScroll = true;
     
     // 更新按钮样式
-    const toggleBtn = document.getElementById('toggleAutoScrollBtn');
-    if (toggleBtn) {
-        toggleBtn.style.backgroundColor = 'rgba(76, 175, 80, 0.8)';
-    }
+    updateAutoScrollBtnStyle();
     
     // 开始滚动
     appState.scrollIntervalId = setInterval(() => {
@@ -1367,6 +1366,28 @@ function startAutoScroll(book) {
     }, appState.scrollSpeed);
 }
 
+// 更新自动滚动按钮样式
+function updateAutoScrollBtnStyle() {
+    const toggleBtn = document.getElementById('toggleAutoScrollBtn');
+    if (!toggleBtn) return;
+    
+    if (appState.autoScroll) {
+        if (appState.loopCurrentBook) {
+            // 单本书自动播放状态 - 蓝色
+            toggleBtn.style.backgroundColor = 'rgba(33, 150, 243, 0.8)';
+            toggleBtn.title = '单本书循环播放 - 双击退出单本书循环，单击退出自动播放';
+        } else {
+            // 普通自动播放状态 - 绿色
+            toggleBtn.style.backgroundColor = 'rgba(76, 175, 80, 0.8)';
+            toggleBtn.title = '自动播放 - 双击进入单本书循环，单击退出自动播放';
+        }
+    } else {
+        // 非自动播放状态
+        toggleBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+        toggleBtn.title = '自动播放 - 单击开始自动播放，双击开始单本书循环播放';
+    }
+}
+
 // 停止自动滚动
 function stopAutoScroll() {
     appState.autoScroll = false;
@@ -1378,10 +1399,7 @@ function stopAutoScroll() {
     }
     
     // 更新按钮样式
-    const toggleBtn = document.getElementById('toggleAutoScrollBtn');
-    if (toggleBtn) {
-        toggleBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-    }
+    updateAutoScrollBtnStyle();
 }
 
 // 切换自动滚动状态
@@ -1439,16 +1457,38 @@ function checkScrollEnd(book, pagesElement) {
 // 处理滚动触底
 async function handleScrollEnd(book, contentTooShort = false) {
     if (book.fileType === 'pdf') {
-        // PDF处理：如果是最后一页，切换到下一本书
+        // PDF处理：如果是最后一页
         if (book.currentPageIndex >= book.totalPages - 1) {
-            // 如果内容太短，停顿5秒后再切换到下一本书
-            if (contentTooShort) {
-                setTimeout(() => {
-                    switchToNextBook();
-                }, 5000); // 停顿5秒
+            // 检查是否开启了当前书循环
+            if (appState.loopCurrentBook) {
+                // 如果内容太短，停顿5秒后再回到第一页
+                if (contentTooShort) {
+                    setTimeout(async () => {
+                        // 回到第一页
+                        book.currentPageIndex = 0;
+                        await renderBookContent(book);
+                        
+                        // 重新启动自动滚动
+                        setTimeout(() => startAutoScroll(book), 500);
+                    }, 5000); // 停顿5秒
+                } else {
+                    // 回到第一页
+                    book.currentPageIndex = 0;
+                    await renderBookContent(book);
+                    
+                    // 重新启动自动滚动
+                    setTimeout(() => startAutoScroll(book), 500);
+                }
             } else {
-                // 当前书已读完，切换到下一本书
-                switchToNextBook();
+                // 如果内容太短，停顿5秒后再切换到下一本书
+                if (contentTooShort) {
+                    setTimeout(() => {
+                        switchToNextBook();
+                    }, 5000); // 停顿5秒
+                } else {
+                    // 当前书已读完，切换到下一本书
+                    switchToNextBook();
+                }
             }
         } else {
             // 如果内容太短，停顿5秒后再切换到下一页
@@ -1469,16 +1509,52 @@ async function handleScrollEnd(book, contentTooShort = false) {
             }
         }
     } else if (book.fileType === 'epub' || book.fileType === 'epub-unzipped') {
-        // EPUB处理：如果是最后一个章节，切换到下一本书
+        // EPUB处理：如果是最后一个章节
         if (book.currentChapterIndex >= book.totalChapters - 1) {
-            // 如果内容太短，停顿5秒后再切换到下一本书
-            if (contentTooShort) {
-                setTimeout(() => {
-                    switchToNextBook();
-                }, 5000); // 停顿5秒
+            // 检查是否开启了当前书循环
+            if (appState.loopCurrentBook) {
+                // 如果内容太短，停顿5秒后再回到第一章
+                if (contentTooShort) {
+                    setTimeout(async () => {
+                        // 回到第一章
+                        book.currentChapterIndex = 0;
+                        await renderBookContent(book);
+                        
+                        // 更新章节信息
+                        const bookElement = document.querySelector(`[data-book-id="${book.id}"]`);
+                        if (bookElement) {
+                            updateChapterInfo(bookElement, book);
+                            updateChapterDropdown(bookElement, book);
+                        }
+                        
+                        // 重新启动自动滚动
+                        setTimeout(() => startAutoScroll(book), 500);
+                    }, 5000); // 停顿5秒
+                } else {
+                    // 回到第一章
+                    book.currentChapterIndex = 0;
+                    await renderBookContent(book);
+                    
+                    // 更新章节信息
+                    const bookElement = document.querySelector(`[data-book-id="${book.id}"]`);
+                    if (bookElement) {
+                        updateChapterInfo(bookElement, book);
+                        updateChapterDropdown(bookElement, book);
+                    }
+                    
+                    // 重新启动自动滚动
+                    setTimeout(() => startAutoScroll(book), 500);
+                }
             } else {
-                // 当前书已读完，切换到下一本书
-                switchToNextBook();
+                // 如果内容太短，停顿5秒后再切换到下一本书
+                if (contentTooShort) {
+                    setTimeout(() => {
+                        switchToNextBook();
+                    }, 5000); // 停顿5秒
+                } else {
+                    // 当前书已读完，切换到下一本书
+                    switchToNextBook();
+                }
             }
         } else {
             // 如果内容太短，停顿5秒后再切换到下一章节
@@ -1556,4 +1632,35 @@ function setupAutoScrollEventListeners() {
             }
         }
     });
+    
+    // 全局双击事件委托，处理自动滚动按钮双击
+    document.addEventListener('dblclick', function(e) {
+        // 处理自动滚动按钮双击
+        if (e.target.id === 'toggleAutoScrollBtn') {
+            // 切换当前书循环模式
+            toggleLoopCurrentBook();
+        }
+    });
+}
+
+// 切换当前书循环模式
+function toggleLoopCurrentBook() {
+    const currentBook = appState.currentBook;
+    if (!currentBook) return;
+    
+    // 如果当前不是自动播放状态，先启动自动播放
+    if (!appState.autoScroll) {
+        startAutoScroll(currentBook);
+        // 直接开启单本书循环
+        appState.loopCurrentBook = true;
+    } else {
+        // 如果已经是自动播放状态，切换单本书循环状态
+        appState.loopCurrentBook = !appState.loopCurrentBook;
+    }
+    
+    // 更新按钮样式
+    updateAutoScrollBtnStyle();
+    
+    // 更新状态
+    updateStatus(appState.loopCurrentBook ? '已开启单本书循环播放' : '已关闭单本书循环播放，当前为普通自动播放');
 }
