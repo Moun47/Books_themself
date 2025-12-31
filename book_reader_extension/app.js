@@ -1218,22 +1218,15 @@ function adjustFontSize(book, direction) {
     
     const currentSize = parseInt(getComputedStyle(pagesElement).fontSize);
     
-    // 定义字体大小范围和步长
-    const sizes = [14, 15, 16, 18, 20];
+    // 定义字体大小步长和最小值限制
+    const step = 1; // 步长为1px，调整更平滑
+    const minSize = 10; // 最小字体大小限制
     
-    // 找到当前字体大小在数组中的索引
-    let currentIndex = sizes.indexOf(currentSize);
-    if (currentIndex === -1) {
-        // 如果当前大小不在预设数组中，找到最接近的
-        currentIndex = sizes.reduce((closest, size, index) => 
-            Math.abs(size - currentSize) < Math.abs(sizes[closest] - currentSize) ? index : closest, 0);
-    }
-    
-    // 计算新的索引
-    const newIndex = Math.max(0, Math.min(sizes.length - 1, currentIndex + direction));
+    // 计算新的字体大小，只保留最小值限制，取消最大值限制
+    let newSize = currentSize + (direction * step);
+    newSize = Math.max(minSize, newSize); // 只限制最小值
     
     // 设置新的字体大小
-    const newSize = sizes[newIndex];
     pagesElement.style.fontSize = `${newSize}px`;
     
     // 更新状态
