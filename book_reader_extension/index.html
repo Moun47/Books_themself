@@ -32,8 +32,8 @@
             <div class="book-header">
                 <!-- 导航按钮组 -->
                 <div class="chapter-navigation">
-                    <!-- 文件夹选择按钮 -->
-                    <button id="folderSelectBtn" class="folder-select-btn-icon" title="选择文件夹">📁</button>
+                    <!-- 搜索选择按钮 -->
+                    <button id="folderSelectBtn" class="folder-select-btn-icon" title="搜索选择图书">🔍</button>
                     
                     <!-- 随机阅读按钮 -->
                     <button id="randomDisplayBtn" class="random-display-btn-icon" title="随机阅读">🎲</button>
@@ -75,6 +75,12 @@
         </div>
     </template>
 
+    <!-- 搜索框 -->
+    <div id="searchBox" class="search-box" style="display: none;">
+        <input type="text" id="searchInput" placeholder="搜索图书..." class="search-input">
+        <div id="searchResults" class="search-results"></div>
+    </div>
+    
     <!-- 状态栏 -->
     <div class="status-bar">
         <span id="statusText">等待选择文件夹...</span>

@@ -23,6 +23,9 @@ const appState = {
 const statusText = document.getElementById('statusText');
 const booksContainer = document.getElementById('booksContainer');
 const bookTemplate = document.getElementById('bookTemplate');
+const searchBox = document.getElementById('searchBox');
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
 
 // 直接创建folderInput元素，而不是从模板中获取
 const folderInput = document.createElement('input');
@@ -43,7 +46,113 @@ function initApp() {
         return;
     }
     setupEventListeners();
+    setupSearchEventListeners();
     setupAutoScrollEventListeners();
+}
+
+// 设置搜索相关事件监听器
+function setupSearchEventListeners() {
+    // 搜索输入事件
+    searchInput.addEventListener('input', handleSearchInput);
+    
+    // 点击搜索结果事件委托
+    searchResults.addEventListener('click', handleSearchResultClick);
+    
+    // 点击搜索框外部关闭搜索框
+    document.addEventListener('click', function(e) {
+        if (!searchBox.contains(e.target) && !e.target.closest('.folder-select-btn-icon')) {
+            closeSearchBox();
+        }
+    });
+}
+
+// 切换搜索框显示/隐藏
+function toggleSearchBox() {
+    if (searchBox.style.display === 'none' || searchBox.style.display === '') {
+        openSearchBox();
+    } else {
+        closeSearchBox();
+    }
+}
+
+// 打开搜索框
+function openSearchBox() {
+    searchBox.style.display = 'block';
+    searchInput.focus();
+    // 初始化搜索结果
+    updateSearchResults();
+}
+
+// 关闭搜索框
+function closeSearchBox() {
+    searchBox.style.display = 'none';
+    searchInput.value = '';
+    searchResults.innerHTML = '';
+}
+
+// 处理搜索输入
+function handleSearchInput() {
+    updateSearchResults();
+}
+
+// 更新搜索结果
+function updateSearchResults() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    let filteredBooks = appState.books;
+    
+    // 根据搜索词过滤书籍
+    if (searchTerm) {
+        filteredBooks = appState.books.filter(book => 
+            book.title.toLowerCase().includes(searchTerm) ||
+            book.fileName.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // 渲染搜索结果
+    renderSearchResults(filteredBooks);
+}
+
+// 渲染搜索结果
+function renderSearchResults(books) {
+    searchResults.innerHTML = '';
+    
+    if (books.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-empty">没有找到匹配的图书</div>';
+        return;
+    }
+    
+    books.forEach(book => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'search-result-item';
+        resultItem.dataset.bookId = book.id;
+        resultItem.innerHTML = `
+            <div class="search-result-title">${book.title}</div>
+            <div class="search-result-type">${book.fileType.toUpperCase()}</div>
+        `;
+        searchResults.appendChild(resultItem);
+    });
+}
+
+// 处理搜索结果点击
+async function handleSearchResultClick(e) {
+    const resultItem = e.target.closest('.search-result-item');
+    if (resultItem) {
+        const bookId = resultItem.dataset.bookId;
+        const book = appState.books.find(b => b.id === bookId);
+        if (book) {
+            // 关闭搜索框
+            closeSearchBox();
+            
+            // 从第一章开始显示
+            book.currentChapterIndex = 0;
+            if (book.fileType === 'pdf') {
+                book.currentPageIndex = 0;
+            }
+            
+            // 显示选中的图书
+            await displayBook(book);
+        }
+    }
 }
 
 // 设置事件监听器
@@ -69,9 +178,9 @@ function setupEventListeners() {
         else if (e.target.classList.contains('empty-state') || (e.target.closest && e.target.closest('.empty-state'))) {
             selectFolder();
         }
-        // 处理文件夹选择按钮点击
+        // 处理搜索选择按钮点击
         else if (e.target.classList.contains('folder-select-btn-icon') || e.target.id === 'folderSelectBtn') {
-            selectFolder();
+            toggleSearchBox();
         }
         // 处理字体大小调整按钮点击
         else if (e.target.classList.contains('font-size-btn')) {
