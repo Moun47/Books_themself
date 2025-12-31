@@ -12,6 +12,9 @@ const appState = {
     autoScroll: false,
     scrollSpeed: 20, // 滚动速度，单位ms，默认调整为更快
     scrollIntervalId: null,
+    // 屏幕常亮相关状态
+    wakeLock: null,
+    wakeLockActive: false,
     // 用于跟踪图书阅读顺序
     readBooksOrder: [],
     currentReadIndex: 0,
@@ -48,6 +51,14 @@ function initApp() {
     setupEventListeners();
     setupSearchEventListeners();
     setupAutoScrollEventListeners();
+    
+    // 初始化屏幕常亮按钮状态
+    updateWakeLockButtonState();
+    
+    // 在页面卸载时释放Wake Lock
+    window.addEventListener('beforeunload', () => {
+        releaseWakeLock();
+    });
 }
 
 // 设置搜索相关事件监听器
@@ -155,6 +166,70 @@ async function handleSearchResultClick(e) {
     }
 }
 
+// 请求屏幕常亮锁
+async function requestWakeLock() {
+    try {
+        if (!navigator.wakeLock) {
+            console.warn('Wake Lock API 不被支持');
+            return false;
+        }
+        
+        appState.wakeLock = await navigator.wakeLock.request('screen');
+        appState.wakeLockActive = true;
+        console.log('Wake Lock 已激活');
+        
+        // 监听释放事件
+        appState.wakeLock.addEventListener('release', () => {
+            appState.wakeLock = null;
+            appState.wakeLockActive = false;
+            console.log('Wake Lock 已自动释放');
+            updateWakeLockButtonState();
+        });
+        
+        updateWakeLockButtonState();
+        return true;
+    } catch (err) {
+        console.error('无法获取 Wake Lock:', err);
+        appState.wakeLockActive = false;
+        updateWakeLockButtonState();
+        return false;
+    }
+}
+
+// 释放屏幕常亮锁
+function releaseWakeLock() {
+    if (appState.wakeLock) {
+        appState.wakeLock.release();
+        appState.wakeLock = null;
+        appState.wakeLockActive = false;
+        console.log('Wake Lock 已手动释放');
+        updateWakeLockButtonState();
+    }
+}
+
+// 切换屏幕常亮状态
+async function toggleWakeLock() {
+    if (appState.wakeLockActive) {
+        releaseWakeLock();
+    } else {
+        await requestWakeLock();
+    }
+}
+
+// 更新屏幕常亮按钮状态
+function updateWakeLockButtonState() {
+    const wakeLockButtons = document.querySelectorAll('.wake-lock-btn');
+    wakeLockButtons.forEach(button => {
+        if (appState.wakeLockActive) {
+            button.style.opacity = '1';
+            button.style.color = '#4CAF50';
+        } else {
+            button.style.opacity = '0.6';
+            button.style.color = '';
+        }
+    });
+}
+
 // 设置事件监听器
 function setupEventListeners() {
     // 文件夹选择事件
@@ -196,6 +271,10 @@ function setupEventListeners() {
                     }
                 }
             }
+        }
+        // 处理屏幕常亮按钮点击
+        else if (e.target.classList.contains('wake-lock-btn') || e.target.id === 'toggleWakeLockBtn') {
+            toggleWakeLock();
         }
     });
 }
@@ -687,6 +766,9 @@ async function displayBook(book) {
         const bookElement = createBookElement(book);
         if (bookElement) {
             booksContainer.appendChild(bookElement);
+            
+            // 更新屏幕常亮按钮状态
+            updateWakeLockButtonState();
             
             // 添加loaded类，确保书籍内容可见
             setTimeout(() => {
