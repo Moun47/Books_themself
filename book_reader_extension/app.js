@@ -15,11 +15,17 @@ const appState = {
     // 屏幕常亮相关状态
     wakeLock: null,
     wakeLockActive: false,
+    // 暗黑模式相关状态
+    darkMode: false,
     // 用于跟踪图书阅读顺序
     readBooksOrder: [],
     currentReadIndex: 0,
     // 自动滚动限制在当前书循环
-    loopCurrentBook: false
+    loopCurrentBook: false,
+    // 双击事件检测相关状态
+    clickCount: 0, // 点击次数计数
+    clickTimer: null, // 点击计时器
+    clickDelay: 250 // 区分单击和双击的时间阈值（毫秒）
 };
 
 // 获取DOM元素
@@ -216,6 +222,13 @@ async function toggleWakeLock() {
     }
 }
 
+// 切换暗黑模式
+function toggleDarkMode() {
+    appState.darkMode = !appState.darkMode;
+    document.body.classList.toggle('dark-theme', appState.darkMode);
+    console.log(`暗黑模式已${appState.darkMode ? '开启' : '关闭'}`);
+}
+
 // 更新屏幕常亮按钮状态
 function updateWakeLockButtonState() {
     const wakeLockButtons = document.querySelectorAll('.wake-lock-btn');
@@ -272,9 +285,38 @@ function setupEventListeners() {
                 }
             }
         }
-        // 处理屏幕常亮按钮点击
-        else if (e.target.classList.contains('wake-lock-btn') || e.target.id === 'toggleWakeLockBtn') {
-            toggleWakeLock();
+    });
+    
+    // 使用基于click事件的计时器方法实现双击检测，这是最可靠的方式
+    document.addEventListener('click', function(e) {
+        // 查找最近的屏幕常亮按钮
+        const targetBtn = e.target.closest('.wake-lock-btn');
+        if (targetBtn) {
+            // 检查是否已经有点击计数
+            if (!appState.clickCount) {
+                appState.clickCount = 1;
+                
+                // 设置计时器，在延迟后检查点击次数
+                appState.clickTimer = setTimeout(function() {
+                    if (appState.clickCount === 1) {
+                        // 执行单击操作：切换常亮状态
+                        toggleWakeLock();
+                    }
+                    
+                    // 重置点击计数
+                    appState.clickCount = 0;
+                }, appState.clickDelay);
+            } else {
+                // 第二次点击，判断为双击
+                // 清除计时器，取消单击操作
+                clearTimeout(appState.clickTimer);
+                
+                // 执行双击操作：切换暗黑模式
+                toggleDarkMode();
+                
+                // 重置点击计数
+                appState.clickCount = 0;
+            }
         }
     });
 }
