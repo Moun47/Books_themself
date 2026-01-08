@@ -1667,96 +1667,56 @@ function checkScrollEnd(book, pagesElement) {
     const scrollHeight = pagesElement.scrollHeight;
     const clientHeight = pagesElement.clientHeight;
     
-    // 检查内容是否不足以产生滚动
-    const contentTooShort = scrollHeight <= clientHeight;
     const isAtBottom = pagesElement.scrollTop + clientHeight >= scrollHeight - 10;
     
     if (isAtBottom) {
         // 停止当前滚动
         stopAutoScroll();
         
-        // 切换到下一章节或下一本书
-        handleScrollEnd(book, contentTooShort);
+        // 切换到下一章节或下一本书，所有情况都停留5秒
+        handleScrollEnd(book);
     }
 }
 
 // 处理滚动触底
-async function handleScrollEnd(book, contentTooShort = false) {
+async function handleScrollEnd(book) {
     if (book.fileType === 'pdf') {
         // PDF处理：如果是最后一页
         if (book.currentPageIndex >= book.totalPages - 1) {
             // 检查是否开启了当前书循环
             if (appState.loopCurrentBook) {
-                // 如果内容太短，停顿5秒后再回到第一页
-                if (contentTooShort) {
-                    setTimeout(async () => {
-                        // 回到第一页
-                        book.currentPageIndex = 0;
-                        await renderBookContent(book);
-                        
-                        // 重新启动自动滚动
-                        setTimeout(() => startAutoScroll(book), 500);
-                    }, 5000); // 停顿5秒
-                } else {
+                // 触底后停留5秒再回到第一页
+                setTimeout(async () => {
                     // 回到第一页
                     book.currentPageIndex = 0;
                     await renderBookContent(book);
                     
                     // 重新启动自动滚动
                     setTimeout(() => startAutoScroll(book), 500);
-                }
-            } else {
-                // 如果内容太短，停顿5秒后再切换到下一本书
-                if (contentTooShort) {
-                    setTimeout(() => {
-                        switchToNextBook();
-                    }, 5000); // 停顿5秒
-                } else {
-                    // 当前书已读完，切换到下一本书
-                    switchToNextBook();
-                }
-            }
-        } else {
-            // 如果内容太短，停顿5秒后再切换到下一页
-            if (contentTooShort) {
-                setTimeout(async () => {
-                    // 切换到下一页
-                    await navigateBook(book, 1);
-                    
-                    // 重新启动自动滚动
-                    setTimeout(() => startAutoScroll(book), 500);
                 }, 5000); // 停顿5秒
             } else {
+                // 触底后停留5秒再切换到下一本书
+                setTimeout(() => {
+                    switchToNextBook();
+                }, 5000); // 停顿5秒
+            }
+        } else {
+            // 触底后停留5秒再切换到下一页
+            setTimeout(async () => {
                 // 切换到下一页
                 await navigateBook(book, 1);
                 
                 // 重新启动自动滚动
                 setTimeout(() => startAutoScroll(book), 500);
-            }
+            }, 5000); // 停顿5秒
         }
     } else if (book.fileType === 'epub' || book.fileType === 'epub-unzipped') {
         // EPUB处理：如果是最后一个章节
         if (book.currentChapterIndex >= book.totalChapters - 1) {
             // 检查是否开启了当前书循环
             if (appState.loopCurrentBook) {
-                // 如果内容太短，停顿5秒后再回到第一章
-                if (contentTooShort) {
-                    setTimeout(async () => {
-                        // 回到第一章
-                        book.currentChapterIndex = 0;
-                        await renderBookContent(book);
-                        
-                        // 更新章节信息
-                        const bookElement = document.querySelector(`[data-book-id="${book.id}"]`);
-                        if (bookElement) {
-                            updateChapterInfo(bookElement, book);
-                            updateChapterDropdown(bookElement, book);
-                        }
-                        
-                        // 重新启动自动滚动
-                        setTimeout(() => startAutoScroll(book), 500);
-                    }, 5000); // 停顿5秒
-                } else {
+                // 触底后停留5秒再回到第一章
+                setTimeout(async () => {
                     // 回到第一章
                     book.currentChapterIndex = 0;
                     await renderBookContent(book);
@@ -1770,35 +1730,22 @@ async function handleScrollEnd(book, contentTooShort = false) {
                     
                     // 重新启动自动滚动
                     setTimeout(() => startAutoScroll(book), 500);
-                }
-            } else {
-                // 如果内容太短，停顿5秒后再切换到下一本书
-                if (contentTooShort) {
-                    setTimeout(() => {
-                        switchToNextBook();
-                    }, 5000); // 停顿5秒
-                } else {
-                    // 当前书已读完，切换到下一本书
-                    switchToNextBook();
-                }
-            }
-        } else {
-            // 如果内容太短，停顿5秒后再切换到下一章节
-            if (contentTooShort) {
-                setTimeout(async () => {
-                    // 切换到下一章节
-                    await navigateBook(book, 1);
-                    
-                    // 重新启动自动滚动
-                    setTimeout(() => startAutoScroll(book), 500);
                 }, 5000); // 停顿5秒
             } else {
+                // 触底后停留5秒再切换到下一本书
+                setTimeout(() => {
+                    switchToNextBook();
+                }, 5000); // 停顿5秒
+            }
+        } else {
+            // 触底后停留5秒再切换到下一章节
+            setTimeout(async () => {
                 // 切换到下一章节
                 await navigateBook(book, 1);
                 
                 // 重新启动自动滚动
                 setTimeout(() => startAutoScroll(book), 500);
-            }
+            }, 5000); // 停顿5秒
         }
     }
 }
