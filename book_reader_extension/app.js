@@ -17,6 +17,8 @@ const appState = {
     wakeLockActive: false,
     // 暗黑模式相关状态
     darkMode: false,
+    // 全局字体大小设置
+    fontSize: 16, // 默认字体大小，与CSS默认值一致
     // 用于跟踪图书阅读顺序
     readBooksOrder: [],
     currentReadIndex: 0,
@@ -859,6 +861,8 @@ async function renderBookContent(book) {
         const contentContainer = document.querySelector(`[data-book-id="${book.id}"] .book-pages`);
         if (contentContainer) {
             contentContainer.scrollTop = 0;
+            // 应用全局字体大小设置
+            contentContainer.style.fontSize = `${appState.fontSize}px`;
         }
         
     } catch (error) {
@@ -1270,6 +1274,9 @@ function adjustFontSize(book, direction) {
     
     // 设置新的字体大小
     pagesElement.style.fontSize = `${newSize}px`;
+    
+    // 更新全局字体大小状态
+    appState.fontSize = newSize;
     
     // 更新状态
     updateStatus(`字体大小已调整为 ${newSize}px`);
