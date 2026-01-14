@@ -1348,9 +1348,9 @@ function updateChapterInfo(book) {
     
     // 根据书籍类型更新章节信息
     if (book.fileType === 'pdf') {
-        chapterInfo.textContent = `第 ${book.currentPageIndex + 1} 页 / 共 ${book.totalPages} 页`;
+        chapterInfo.textContent = `${book.currentPageIndex + 1} / ${book.totalPages}`;
     } else {
-        chapterInfo.textContent = `第 ${book.currentChapterIndex + 1} 章 / 共 ${book.totalChapters} 章`;
+        chapterInfo.textContent = `${book.currentChapterIndex + 1} / ${book.totalChapters}`;
     }
 }
 
