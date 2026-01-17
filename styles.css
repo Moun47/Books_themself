@@ -286,6 +286,14 @@ body.dark-theme .empty-state .hint {
     overflow-x: hidden;
 }
 
+/* 移动端允许横向滚动以隐藏控制栏 */
+@media (max-width: 768px) {
+    .book-item {
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+}
+
 /* 随机展示模式下的书籍容器 */
 .random-display-mode .books-container {
     display: flex;
@@ -332,10 +340,11 @@ body.dark-theme .empty-state .hint {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 30px;
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
     padding: 10px 0;
+    height: 100%;
 }
 
 /* 图标按钮样式 */
@@ -583,6 +592,14 @@ body.dark-theme .empty-state .hint {
     /* 使用flex填充剩余空间，避免基于视口高度的固定计算 */
 }
 
+/* 移动端优化：增加内容区域宽度，允许通过滑动隐藏左侧控制栏 */
+@media (max-width: 768px) {
+    .book-content {
+        flex: 0 0 90vw;
+        min-width: 90vw;
+    }
+}
+
 /* 书籍页面容器 */
 .book-pages {
     height: 100%;
@@ -593,6 +610,14 @@ body.dark-theme .empty-state .hint {
     line-height: 1.8;
     transition: opacity 0.3s ease, transform 0.3s ease;
     /* 移除min-height，让内容自然填充 */
+}
+
+/* 移动端确保内容可以纵向滚动 */
+@media (max-width: 768px) {
+    .book-pages {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 .book-pages.resetting {
@@ -900,7 +925,7 @@ body.dark-theme .empty-state .hint {
     }
     
     .chapter-navigation {
-        gap: 5px;
+        gap: 30px;
         flex-wrap: wrap;
     }
     
@@ -918,6 +943,12 @@ body.dark-theme .empty-state .hint {
         font-size: 14px;
         padding: 6px 12px;
     }
+    
+    /* 移动端隐藏控制按钮 */
+    .wake-lock-btn,
+    .auto-scroll-controls {
+        display: none !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -930,7 +961,7 @@ body.dark-theme .empty-state .hint {
     }
     
     .chapter-navigation {
-        gap: 3px;
+        gap: 30px;
     }
     
     .folder-select-btn-icon,
